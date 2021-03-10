@@ -28,20 +28,28 @@ for file in files:
     file.seek(0)  # reset
     dfs.append(df)
 
+layers = []
 if dfs:
 
     # Calculate viewport of entire dataset
-    for df in dfs:
-        df.append(df)
+    for ii, df_ in enumerate(dfs):
+        if ii == 0:
+            df_['survey'] = ii
+            df = df_.copy()
+        else:
+            df_['survey'] = ii
+            df = df.append(df_)
+            df.append(df_)
     viewport = pdk.data_utils.compute_view(points=df[['WGS84_LON', 'WGS84_LAT']])
 
     # Construct layers
-    layer = pdk.Layer('ScatterplotLayer',
+    layers.append(pdk.Layer('ScatterplotLayer',
                       df[['GPS_FIX', 'WGS84_LON', 'WGS84_LAT']], 
                       get_position=['WGS84_LON', 'WGS84_LAT'],
                       get_radius=2,
                       get_fill_color=[180, 0, 200]
                       )
+    )
 
     st.write("""
     ## Data visualization
@@ -50,7 +58,7 @@ if dfs:
     # Visualize
     st.pydeck_chart(
         pdk.Deck(
-            layer,
+            layers,
             initial_view_state=viewport,
             map_style='mapbox://styles/mapbox/satellite-v9'
             )
