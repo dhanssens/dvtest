@@ -38,7 +38,8 @@ if dfs:
     sub = st.number_input('Resample every', 1, 20, 10, format='%i')
 
     # Calculate viewport of entire dataset
-    for ii, df_ in enumerate(dfs):
+    for ii, num in enumerate(opts):
+        df_ = dfs[num]
         if ii == 0:
             df_['survey'] = ii
             df = df_.copy()
