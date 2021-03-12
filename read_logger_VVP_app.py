@@ -19,16 +19,33 @@ dfs, options = [], []
 for file in files:
 
     # Grab data
-    df = pd.read_csv(file).dropna(subset=['WGS84_LON', 'WGS84_LON'])
-    lon, lat = df['WGS84_LON'].values, df['WGS84_LAT'].values
+    #df = pd.read_csv(file, error_bad_lines=False).dropna(subset=['WGS84_LON', 'WGS84_LON'])
+    #lon, lat = df['WGS84_LON'].values, df['WGS84_LAT'].values
+    #f = open(file, 'r', encoding='utf-8', errors='ignore')  # replace introduces the '\\u' error as well
+    lines = file.readlines()
+    lon, lat = [], []
+    for line in lines[1:]:
+        lon.append(line.split(b',')[3])
+        lat.append(line.split(b',')[4])
+    lon = [float(i) for i in list(filter(None, lon))]
+    lat = [float(i) for i in list(filter(None, lat))]
 
+    df = pd.DataFrame()
+    df['WGS84_LON'], df['WGS84_LAT'] = lon, lat
+    df.describe()
     # Store
     options.append(file.name)
     file.seek(0)  # reset
     dfs.append(df)
 
 # Create color palette
-rgbs = [[84, 71, 140], [44, 105, 154], [4, 139, 168], [13, 179, 158], [22, 219, 147], [131, 227, 119], [185, 231, 105], [239, 234, 90], [241, 196, 83], [242, 158, 76]]
+rgbs = [[84, 71, 140], [44, 105, 154], [4, 139, 168], [13, 179, 158], [22, 219, 147], [131, 227, 119], [185, 231, 105], [239, 234, 90], [241, 196, 83], [242, 158, 76],
+        [84, 71, 140], [44, 105, 154], [4, 139, 168], [13, 179, 158], [22, 219, 147], [131, 227, 119], [185, 231, 105], [239, 234, 90], [241, 196, 83], [242, 158, 76],
+        [84, 71, 140], [44, 105, 154], [4, 139, 168], [13, 179, 158], [22, 219, 147], [131, 227, 119], [185, 231, 105], [239, 234, 90], [241, 196, 83], [242, 158, 76],
+        [84, 71, 140], [44, 105, 154], [4, 139, 168], [13, 179, 158], [22, 219, 147], [131, 227, 119], [185, 231, 105], [239, 234, 90], [241, 196, 83], [242, 158, 76],
+        [84, 71, 140], [44, 105, 154], [4, 139, 168], [13, 179, 158], [22, 219, 147], [131, 227, 119], [185, 231, 105], [239, 234, 90], [241, 196, 83], [242, 158, 76],
+        [84, 71, 140], [44, 105, 154], [4, 139, 168], [13, 179, 158], [22, 219, 147], [131, 227, 119], [185, 231, 105], [239, 234, 90], [241, 196, 83], [242, 158, 76],
+        [84, 71, 140], [44, 105, 154], [4, 139, 168], [13, 179, 158], [22, 219, 147], [131, 227, 119], [185, 231, 105], [239, 234, 90], [241, 196, 83], [242, 158, 76]]
 
 layers = []
 if dfs:
@@ -46,17 +63,17 @@ if dfs:
         else:
             df_['survey'] = ii
             df = df.append(df_)
-            df.append(df_)
     
         # Construct layers
         layers.append(pdk.Layer('ScatterplotLayer',
-                                df_[['GPS_FIX', 'WGS84_LON', 'WGS84_LAT']], 
+                                df_[['survey', 'WGS84_LON', 'WGS84_LAT']], 
                                 get_position=['WGS84_LON', 'WGS84_LAT'],
                                 get_radius=2,
                                 get_fill_color=rgbs[ii]
                                 )
                     )
-    
+    # Subsample
+    df = df[::sub]
     viewport = pdk.data_utils.compute_view(points=df[['WGS84_LON', 'WGS84_LAT']])
 
     st.write("""
